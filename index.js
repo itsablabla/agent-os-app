@@ -1,18 +1,27 @@
 import express from 'express';
-import { AgentOs } from '@rivet-dev/agent-os';
-import common from '@rivet-dev/agent-os-common';
-import pi from '@rivet-dev/agent-os-pi';
+
+// TODO: Uncomment when agent-os packages are published to npm
+// import { AgentOs } from '@rivet-dev/agent-os-core';
+// import common from '@rivet-dev/agent-os-common';
+// import pi from '@rivet-dev/agent-os-pi';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Initialize Agent OS
 let vm = null;
+const AGENT_OS_ENABLED = false; // Set to true once packages are available
 
 async function initializeAgentOS() {
+  if (!AGENT_OS_ENABLED) {
+    console.log('Agent OS demo mode - packages not yet available');
+    console.log('Install with: npm install @rivet-dev/agent-os-core @rivet-dev/agent-os-common @rivet-dev/agent-os-pi');
+    return;
+  }
+  
   try {
     console.log('Initializing Agent OS...');
-    vm = await AgentOs.create({ software: [common, pi] });
+    // vm = await AgentOs.create({ software: [common, pi] });
     console.log('Agent OS initialized successfully');
   } catch (error) {
     console.error('Failed to initialize Agent OS:', error);
@@ -27,25 +36,55 @@ app.use(express.json());
 app.get('/', (req, res) => {
   res.json({
     status: 'ok',
-    message: 'Agent OS is running',
-    timestamp: new Date().toISOString()
+    message: AGENT_OS_ENABLED ? 'Agent OS is running' : 'Agent OS demo (awaiting package availability)',
+    agentOsEnabled: AGENT_OS_ENABLED,
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: 'GET /',
+      info: 'GET /api/info',
+      session: 'POST /api/session',
+      prompt: 'POST /api/prompt',
+      file: 'GET /api/file?path=...',
+      closeSession: 'DELETE /api/session/:sessionId'
+    }
+  });
+});
+
+// Info endpoint
+app.get('/api/info', (req, res) => {
+  res.json({
+    name: 'Agent OS Application',
+    version: '1.0.0',
+    description: 'Portable OS for AI agents - Deployment ready for Dokploy',
+    agentOsEnabled: AGENT_OS_ENABLED,
+    status: AGENT_OS_ENABLED ? 'operational' : 'demo-mode',
+    documentation: 'https://rivet.dev/docs/agent-os',
+    repository: 'https://github.com/rivet-dev/agent-os'
   });
 });
 
 // Create session endpoint
 app.post('/api/session', async (req, res) => {
+  if (!AGENT_OS_ENABLED) {
+    return res.status(503).json({ 
+      error: 'Agent OS packages not available',
+      message: 'Install packages: npm install @rivet-dev/agent-os-core @rivet-dev/agent-os-common @rivet-dev/agent-os-pi',
+      documentation: 'https://rivet.dev/docs/agent-os/quickstart'
+    });
+  }
+
   try {
     if (!vm) {
       return res.status(503).json({ error: 'Agent OS not initialized' });
     }
 
-    const { sessionId } = await vm.createSession('pi', {
-      env: { 
-        ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || ''
-      },
-    });
+    // const { sessionId } = await vm.createSession('pi', {
+    //   env: { 
+    //     ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || ''
+    //   },
+    // });
 
-    res.json({ sessionId });
+    res.json({ sessionId: 'demo-session-id' });
   } catch (error) {
     console.error('Error creating session:', error);
     res.status(500).json({ error: error.message });

@@ -9,10 +9,12 @@
     "dev": "node index.js"
   },
   "dependencies": {
-    "@rivet-dev/agent-os": "latest",
-    "@rivet-dev/agent-os-common": "latest",
-    "@rivet-dev/agent-os-pi": "latest",
     "express": "^4.18.2"
+  },
+  "optionalDependencies": {
+    "@rivet-dev/agent-os-core": "latest",
+    "@rivet-dev/agent-os-common": "latest",
+    "@rivet-dev/agent-os-pi": "latest"
   },
   "engines": {
     "node": ">=18.0.0"
